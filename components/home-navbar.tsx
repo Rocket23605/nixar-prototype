@@ -18,11 +18,8 @@ export function HomeNavbar() {
 
         <div className="flex items-center gap-3">
           <ThemeToggle />
-          <Button asChild variant="ghost" size="sm" className="text-foreground">
-            <Link href="/login">Log in</Link>
-          </Button>
           <Button asChild size="sm" className="bg-accent hover:bg-accent/90 text-accent-foreground">
-            <Link href="/login">Get started</Link>
+            <Link href="/login">Log in</Link>
           </Button>
         </div>
       </div>

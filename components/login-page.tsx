@@ -55,15 +55,11 @@ export function LoginPage({ onLogin }: LoginPageProps) {
       <div className="w-full max-w-md">
         {/* Logo and Title */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl overflow-hidden bg-accent/20 mb-4">
-            <Image src="/logo.png" alt="Nixar" width={64} height={64} className="object-contain" />
+          <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl overflow-hidden bg-accent/20 mb-4">
+            <Image src="/logo.png" alt="Nixar" width={56} height={56} className="object-contain" />
           </div>
-          <h1 className="text-3xl font-bold text-foreground mb-2">Nixar</h1>
-          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-accent/20 text-accent text-sm font-medium">
-            <span className="w-1.5 h-1.5 rounded-full bg-accent animate-pulse" />
-            AI-Powered
-          </span>
-          <p className="text-muted-foreground mt-4">
+          <h1 className="text-3xl font-bold text-foreground mb-4">Nixar</h1>
+          <p className="text-muted-foreground">
             แพลตฟอร์มติวคณิตศาสตร์ A-Level อัจฉริยะ
           </p>
         </div>
