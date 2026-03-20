@@ -1,10 +1,11 @@
 "use client"
 
+import Image from "next/image"
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
-import { Brain, Eye, EyeOff, AlertCircle } from "lucide-react"
+import { Eye, EyeOff, AlertCircle } from "lucide-react"
 
 interface User {
   username: string
@@ -54,8 +55,8 @@ export function LoginPage({ onLogin }: LoginPageProps) {
       <div className="w-full max-w-md">
         {/* Logo and Title */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-accent/20 mb-4">
-            <Brain className="w-8 h-8 text-accent" />
+          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl overflow-hidden bg-accent/20 mb-4">
+            <Image src="/logo.png" alt="Nixar" width={64} height={64} className="object-contain" />
           </div>
           <h1 className="text-3xl font-bold text-foreground mb-2">Nixar</h1>
           <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-accent/20 text-accent text-sm font-medium">

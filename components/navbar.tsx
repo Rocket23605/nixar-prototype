@@ -1,8 +1,9 @@
 "use client"
 
+import Image from "next/image"
 import { Button } from "@/components/ui/button"
 import { ThemeToggle } from "@/components/theme-toggle"
-import { Brain, LogOut, User } from "lucide-react"
+import { LogOut, User } from "lucide-react"
 
 interface NavbarProps {
   displayName: string
@@ -15,8 +16,8 @@ export function Navbar({ displayName, onLogout }: NavbarProps) {
       <div className="max-w-7xl mx-auto px-4 h-14 flex items-center justify-between">
         {/* Logo */}
         <div className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-lg bg-accent/20 flex items-center justify-center">
-            <Brain className="w-4 h-4 text-accent" />
+          <div className="w-8 h-8 rounded-lg overflow-hidden flex items-center justify-center bg-accent/20">
+            <Image src="/logo.png" alt="Nixar" width={32} height={32} className="object-contain" />
           </div>
           <span className="font-bold text-foreground">Nixar</span>
         </div>
