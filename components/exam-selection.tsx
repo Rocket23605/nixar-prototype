@@ -56,6 +56,20 @@ export function ExamSelection({ studentName, onSelectExam }: ExamSelectionProps)
             เลือกชุดข้อสอบที่ต้องการทำ
           </p>
         </div>
+        {/* Tips */}
+        <Card className="mt-8 border-accent/30 bg-accent/5">
+          <CardContent className="p-4 md:p-6">
+            <h3 className="font-semibold text-foreground mb-2 flex items-center gap-2">
+              <span className="text-lg">💡</span>
+              เคล็ดลับการทำข้อสอบ
+            </h3>
+            <ul className="text-sm text-muted-foreground space-y-1">
+              <li>• อ่านโจทย์ให้ครบถ้วนก่อนตอบ</li>
+              <li>• บริหารเวลาให้ดี แบ่งเวลาต่อข้อ</li>
+              <li>• หลังส่งข้อสอบ AI จะวิเคราะห์จุดอ่อน-จุดแข็งให้ทันที</li>
+            </ul>
+          </CardContent>
+        </Card>
 
         {/* Exam List */}
         <div className="space-y-4">
@@ -130,20 +144,6 @@ export function ExamSelection({ studentName, onSelectExam }: ExamSelectionProps)
           ))}
         </div>
 
-        {/* Tips */}
-        <Card className="mt-8 border-accent/30 bg-accent/5">
-          <CardContent className="p-4 md:p-6">
-            <h3 className="font-semibold text-foreground mb-2 flex items-center gap-2">
-              <span className="text-lg">💡</span>
-              เคล็ดลับการทำข้อสอบ
-            </h3>
-            <ul className="text-sm text-muted-foreground space-y-1">
-              <li>• อ่านโจทย์ให้ครบถ้วนก่อนตอบ</li>
-              <li>• บริหารเวลาให้ดี แบ่งเวลาต่อข้อ</li>
-              <li>• หลังส่งข้อสอบ AI จะวิเคราะห์จุดอ่อน-จุดแข็งให้ทันที</li>
-            </ul>
-          </CardContent>
-        </Card>
       </div>
     </div>
   )
