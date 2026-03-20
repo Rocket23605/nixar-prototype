@@ -7,6 +7,7 @@ import {
   XCircle,
   Target,
   TrendingUp,
+  TrendingDown,
   BookOpen,
   ArrowRight,
   RotateCcw,
@@ -114,6 +115,11 @@ export function AIReportThai({ answers, onRetake, onBackToSelection }: AIReportT
 
   const level = getLevel(scorePercentage)
 
+  // เปรียบเทียบกับค่าเฉลี่ย
+  const AVERAGE_SCORE = 52
+  const diffFromAverage = scorePercentage - AVERAGE_SCORE
+  const isAboveAverage = diffFromAverage >= 0
+
   // Calculate topic scores
   const topicScores: Record<string, { correct: number; total: number }> = {}
   QUESTIONS.forEach((q) => {
@@ -214,13 +220,20 @@ export function AIReportThai({ answers, onRetake, onBackToSelection }: AIReportT
                 </div>
                 <div className="flex items-center gap-3">
                   <span className="text-muted-foreground">เปรียบเทียบกับค่าเฉลี่ย:</span>
-                  <span className="flex items-center gap-1 text-success">
-                    <TrendingUp className="w-4 h-4" />
-                    สูงกว่าค่าเฉลี่ย 8%
-                  </span>
+                  {isAboveAverage ? (
+                    <span className="flex items-center gap-1 text-success">
+                      <TrendingUp className="w-4 h-4" />
+                      สูงกว่าค่าเฉลี่ย {diffFromAverage}%
+                    </span>
+                  ) : (
+                    <span className="flex items-center gap-1 text-destructive">
+                      <TrendingDown className="w-4 h-4" />
+                      น้อยกว่าค่าเฉลี่ย {AVERAGE_SCORE}% อยู่ {Math.abs(diffFromAverage)}%
+                    </span>
+                  )}
                 </div>
                 <p className="text-sm text-muted-foreground">
-                  ค่าเฉลี่ยของผู้สอบทั้งหมด: 52%
+                  ค่าเฉลี่ยของผู้สอบทั้งหมด: {AVERAGE_SCORE}%
                 </p>
               </div>
             </div>
