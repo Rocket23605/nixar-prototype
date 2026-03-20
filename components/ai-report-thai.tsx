@@ -7,18 +7,20 @@ import {
   XCircle,
   Target,
   TrendingUp,
-  AlertTriangle,
   BookOpen,
   ArrowRight,
   RotateCcw,
 } from "lucide-react"
 import {
-  Radar,
-  RadarChart,
-  PolarGrid,
-  PolarAngleAxis,
-  PolarRadiusAxis,
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
   ResponsiveContainer,
+  Legend,
+  ReferenceLine,
 } from "recharts"
 import { QUESTIONS } from "./student-exam-thai"
 
@@ -124,18 +126,26 @@ export function AIReportThai({ answers, onRetake, onBackToSelection }: AIReportT
     }
   })
 
-  // Radar chart data
-  const radarData = TOPIC_DATA.map((t) => ({
-    topic: t.topic,
-    score: topicScores[t.topic]
-      ? Math.round((topicScores[t.topic].correct / topicScores[t.topic].total) * 100)
-      : 0,
-    fullMark: t.fullMark,
-  }))
+  // Bar chart data: แกน X = บท, แกน Y บวก = ข้อถูก, แกน Y ลบ = ข้อผิด
+  const barChartData = TOPIC_DATA.map((t) => {
+    const data = topicScores[t.topic] || { correct: 0, total: 0 }
+    const wrong = data.total - data.correct
+    return {
+      topic: t.topic,
+      correct: data.correct,
+      wrong: -wrong, // ใช้ค่าติดลบเพื่อแสดงด้านลบของแกน Y
+    }
+  })
 
-  // Find weakest topic
-  const weakestTopic = radarData.reduce((prev, current) =>
-    prev.score < current.score ? prev : current
+  // คำนวณ domain ให้สมมาตรรอบ 0 เพื่อให้แกน X อยู่ที่ Y=0
+  const maxBarValue = Math.max(
+    ...barChartData.flatMap((d) => [d.correct, Math.abs(d.wrong)]),
+    1
+  )
+
+  // Find weakest topic (จาก topic ที่มี wrong มากที่สุด)
+  const weakestTopic = barChartData.reduce((prev, current) =>
+    Math.abs(prev.wrong) >= Math.abs(current.wrong) ? prev : current
   )
 
   return (
@@ -214,88 +224,63 @@ export function AIReportThai({ answers, onRetake, onBackToSelection }: AIReportT
                 </p>
               </div>
             </div>
-          </CardContent>
-        </Card>
 
-        {/* Section 2: Topic Analysis with Radar Chart */}
-        <Card className="border-border/50 bg-card/50">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-foreground">
-              <TrendingUp className="w-5 h-5 text-accent" />
-              ส่วนที่ 2: วิเคราะห์จุดอ่อน-จุดแข็ง
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="flex flex-col lg:flex-row gap-8">
-              {/* Radar Chart */}
-              <div className="w-full lg:w-1/2 h-64">
+            {/* Bar Chart: สรุปข้อถูก-ข้อผิดแยกตามบท */}
+            <div className="mt-8 pt-6 border-t border-border">
+              <h4 className="text-sm font-medium text-foreground mb-4">
+                สรุปผลแยกตามบทเรียน
+              </h4>
+              <div className="h-56">
                 <ResponsiveContainer width="100%" height="100%">
-                  <RadarChart data={radarData}>
-                    <PolarGrid stroke="hsl(var(--border))" />
-                    <PolarAngleAxis
+                  <BarChart data={barChartData} margin={{ top: 10, right: 10, left: 10, bottom: 0 }}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
+                    <XAxis
                       dataKey="topic"
-                      tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 12 }}
+                      stroke="var(--foreground)"
+                      tick={{ fill: "var(--foreground)", fontSize: 12 }}
+                      tickLine={{ stroke: "var(--foreground)" }}
                     />
-                    <PolarRadiusAxis
-                      angle={30}
-                      domain={[0, 100]}
-                      tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 10 }}
+                    <YAxis
+                      domain={[-maxBarValue, maxBarValue]}
+                      stroke="var(--foreground)"
+                      tick={{ fill: "var(--foreground)", fontSize: 12 }}
+                      tickLine={{ stroke: "var(--foreground)" }}
+                      tickFormatter={(v) => (v < 0 ? Math.abs(v).toString() : v.toString())}
                     />
-                    <Radar
-                      name="คะแนน"
-                      dataKey="score"
-                      stroke="hsl(var(--accent))"
-                      fill="hsl(var(--accent))"
-                      fillOpacity={0.3}
+                    <ReferenceLine y={0} stroke="var(--foreground)" strokeWidth={1} />
+                    <Tooltip
+                      contentStyle={{
+                        backgroundColor: "var(--card)",
+                        border: "1px solid var(--border)",
+                        borderRadius: "8px",
+                      }}
+                      labelStyle={{ color: "var(--foreground)" }}
+                      itemStyle={{ color: "var(--foreground)" }}
+                      formatter={(value: number, name: string) => [
+                        name === "correct" ? value : Math.abs(value),
+                        name === "correct" ? "ข้อถูก" : "ข้อผิด",
+                      ]}
+                      labelFormatter={(label) => label}
                     />
-                  </RadarChart>
+                    <Legend
+                      formatter={(value) => (value === "correct" ? "ข้อถูก" : "ข้อผิด")}
+                      wrapperStyle={{ color: "var(--foreground)" }}
+                    />
+                    <Bar dataKey="correct" name="correct" fill="var(--success)" radius={[4, 4, 0, 0]} />
+                    <Bar dataKey="wrong" name="wrong" fill="var(--destructive)" radius={[0, 0, 4, 4]} />
+                  </BarChart>
                 </ResponsiveContainer>
-              </div>
-
-              {/* Topic Bars */}
-              <div className="flex-1 space-y-4">
-                {radarData.map((topic) => (
-                  <div key={topic.topic}>
-                    <div className="flex justify-between mb-1">
-                      <span className="text-sm text-foreground">{topic.topic}</span>
-                      <span className="text-sm text-muted-foreground">{topic.score}%</span>
-                    </div>
-                    <div className="w-full bg-secondary rounded-full h-2">
-                      <div
-                        className={`h-full rounded-full transition-all duration-500 ${
-                          topic.score >= 60 ? "bg-success" : topic.score >= 40 ? "bg-warning" : "bg-destructive"
-                        }`}
-                        style={{ width: `${topic.score}%` }}
-                      />
-                    </div>
-                  </div>
-                ))}
-
-                {/* Weakness Alert */}
-                <div className="mt-4 p-3 rounded-lg bg-destructive/10 border border-destructive/30">
-                  <div className="flex items-start gap-2">
-                    <AlertTriangle className="w-5 h-5 text-destructive shrink-0 mt-0.5" />
-                    <div>
-                      <p className="text-sm font-medium text-destructive">
-                        จุดอ่อน: {weakestTopic.topic}
-                      </p>
-                      <p className="text-xs text-muted-foreground mt-1">
-                        คุณเสียคะแนนหมวดนี้มากที่สุด — แนะนำให้เน้นทบทวน
-                      </p>
-                    </div>
-                  </div>
-                </div>
               </div>
             </div>
           </CardContent>
         </Card>
 
-        {/* Section 3: Answer Review */}
+        {/* Section 2: Answer Review */}
         <Card className="border-border/50 bg-card/50">
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-foreground">
               <BookOpen className="w-5 h-5 text-accent" />
-              ส่วนที่ 3: เฉลยทุกข้อ
+              ส่วนที่ 2: เฉลยทุกข้อ
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -374,13 +359,18 @@ export function AIReportThai({ answers, onRetake, onBackToSelection }: AIReportT
           </CardContent>
         </Card>
 
-        {/* Section 4: Learning Path */}
+        {/* Section 3: Learning Path */}
         <Card className="border-border/50 bg-card/50">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-foreground">
-              <Target className="w-5 h-5 text-accent" />
-              ส่วนที่ 4: แผนการเรียนส่วนตัวจาก AI
-            </CardTitle>
+            <div className="flex items-center justify-between w-full">
+              <CardTitle className="flex items-center gap-2 text-foreground">
+                <Target className="w-5 h-5 text-accent" />
+                ส่วนที่ 3: แผนการเรียนส่วนตัวจาก AI
+              </CardTitle>
+              <span className="text-xs px-2 py-1 rounded-full bg-accent/20 text-accent font-medium">
+                Paid member
+              </span>
+            </div>
           </CardHeader>
           <CardContent>
             <div className="p-4 rounded-xl bg-accent/10 border border-accent/30 mb-6">
