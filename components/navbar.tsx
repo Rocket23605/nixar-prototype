@@ -19,9 +19,6 @@ export function Navbar({ displayName, onLogout }: NavbarProps) {
             <Brain className="w-4 h-4 text-accent" />
           </div>
           <span className="font-bold text-foreground">Nixar</span>
-          <span className="hidden sm:inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-accent/20 text-accent text-xs font-medium">
-            AI-Powered
-          </span>
         </div>
 
         {/* User & Logout */}

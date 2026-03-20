@@ -41,7 +41,7 @@ const KPI_DATA = [
   },
   {
     title: "รายงาน AI ที่สร้าง",
-    value: "9,234",
+    value: "923",
     change: "+18.7%",
     isPositive: true,
     icon: Brain,
