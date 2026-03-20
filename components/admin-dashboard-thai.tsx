@@ -56,11 +56,11 @@ const KPI_DATA = [
 ]
 
 const ERROR_RATE_DATA = [
-  { topic: "แคลคูลัส", rate: 68, color: "hsl(var(--chart-1))" },
-  { topic: "ลอการิทึม", rate: 61, color: "hsl(var(--chart-3))" },
-  { topic: "ตรีโกณมิติ", rate: 52, color: "hsl(var(--chart-4))" },
-  { topic: "พีชคณิต", rate: 45, color: "hsl(var(--chart-2))" },
-  { topic: "สถิติ", rate: 38, color: "hsl(var(--chart-5))" },
+  { topic: "แคลคูลัส", rate: 68, color: "var(--chart-1)" },
+  { topic: "ลอการิทึม", rate: 61, color: "var(--chart-3)" },
+  { topic: "ตรีโกณมิติ", rate: 52, color: "var(--chart-4)" },
+  { topic: "พีชคณิต", rate: 45, color: "var(--chart-2)" },
+  { topic: "สถิติ", rate: 38, color: "var(--chart-5)" },
 ]
 
 const RECENT_STUDENTS = [
@@ -134,28 +134,31 @@ export function AdminDashboardThai() {
               <div className="h-64">
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart data={ERROR_RATE_DATA} layout="vertical">
-                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                    <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
                     <XAxis
                       type="number"
                       domain={[0, 100]}
                       tickFormatter={(value) => `${value}%`}
-                      stroke="hsl(var(--muted-foreground))"
-                      fontSize={12}
+                      stroke="var(--foreground)"
+                      tick={{ fill: "var(--foreground)", fontSize: 12 }}
+                      tickLine={{ stroke: "var(--foreground)" }}
                     />
                     <YAxis
                       type="category"
                       dataKey="topic"
-                      stroke="hsl(var(--muted-foreground))"
-                      fontSize={12}
+                      stroke="var(--foreground)"
+                      tick={{ fill: "var(--foreground)", fontSize: 12 }}
+                      tickLine={{ stroke: "var(--foreground)" }}
                       width={80}
                     />
                     <Tooltip
                       contentStyle={{
-                        backgroundColor: "hsl(var(--card))",
-                        border: "1px solid hsl(var(--border))",
+                        backgroundColor: "var(--card)",
+                        border: "1px solid var(--border)",
                         borderRadius: "8px",
                       }}
-                      labelStyle={{ color: "hsl(var(--foreground))" }}
+                      labelStyle={{ color: "var(--foreground)" }}
+                      itemStyle={{ color: "var(--foreground)" }}
                       formatter={(value: number) => [`${value}%`, "อัตราการทำผิด"]}
                     />
                     <Bar dataKey="rate" radius={[0, 4, 4, 0]}>
