@@ -6,12 +6,12 @@ import { Button } from "@/components/ui/button"
 import {
   Users,
   FileText,
-  TrendingUp,
   Brain,
   Upload,
   CheckCircle2,
   AlertTriangle,
   Lightbulb,
+  BarChart3,
 } from "lucide-react"
 import {
   BarChart,
@@ -40,19 +40,18 @@ const KPI_DATA = [
     icon: FileText,
   },
   {
-    title: "คะแนนเฉลี่ย",
-    value: "71.2%",
-    change: "+3.1%",
-    isPositive: true,
-    icon: TrendingUp,
-  },
-  {
     title: "รายงาน AI ที่สร้าง",
     value: "9,234",
     change: "+18.7%",
     isPositive: true,
     icon: Brain,
   },
+]
+
+const EXAM_AVERAGE_DATA = [
+  { examSet: "ชุด 1", title: "ข้อสอบ A-Level คณิตศาสตร์ ชุด 1", avgScore: 65 },
+  { examSet: "ชุด 2", title: "ข้อสอบ A-Level คณิตศาสตร์ ชุด 2", avgScore: 72 },
+  { examSet: "ชุด 3", title: "ข้อสอบ A-Level คณิตศาสตร์ ชุด 3", avgScore: 58 },
 ]
 
 const ERROR_RATE_DATA = [
@@ -96,7 +95,7 @@ export function AdminDashboardThai() {
         </div>
 
         {/* KPI Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           {KPI_DATA.map((kpi) => (
             <Card key={kpi.title} className="border-border/50 bg-card/50">
               <CardContent className="p-6">
@@ -120,6 +119,48 @@ export function AdminDashboardThai() {
             </Card>
           ))}
         </div>
+
+        {/* คะแนนเฉลี่ยแต่ละชุดข้อสอบ */}
+        <Card className="border-border/50 bg-card/50">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-foreground">
+              <BarChart3 className="w-5 h-5 text-accent" />
+              คะแนนเฉลี่ยแต่ละชุดข้อสอบ
+            </CardTitle>
+            <p className="text-sm text-muted-foreground mt-1">
+              คะแนนเฉลี่ยของนักเรียนที่ทำข้อสอบแต่ละชุด
+            </p>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {EXAM_AVERAGE_DATA.map((exam) => (
+                <div
+                  key={exam.examSet}
+                  className="p-4 rounded-xl border border-border bg-background/50"
+                >
+                  <p className="text-sm font-medium text-foreground mb-3">
+                    {exam.title}
+                  </p>
+                  <span
+                    className={`text-2xl font-bold ${
+                      exam.avgScore >= 60 ? "text-success" : "text-warning"
+                    }`}
+                  >
+                    {exam.avgScore}%
+                  </span>
+                  <div className="mt-2 h-2 rounded-full bg-muted overflow-hidden">
+                    <div
+                      className={`h-full rounded-full transition-all ${
+                        exam.avgScore >= 60 ? "bg-success" : "bg-warning"
+                      }`}
+                      style={{ width: `${exam.avgScore}%` }}
+                    />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Error Rate Chart */}
