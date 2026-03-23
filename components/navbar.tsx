@@ -17,7 +17,7 @@ export function Navbar({ displayName, onLogout }: NavbarProps) {
         {/* Logo */}
         <div className="flex items-center gap-2">
           <div className="w-8 h-8 rounded-lg overflow-hidden flex items-center justify-center bg-accent/20">
-            <Image src="/logo.png" alt="Nixar" width={32} height={32} className="object-contain" />
+            <Image src="/32.png" alt="Nixar" width={32} height={32} className="object-contain" />
           </div>
           <span className="font-bold text-foreground">Nixar</span>
         </div>

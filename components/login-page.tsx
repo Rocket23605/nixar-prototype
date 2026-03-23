@@ -56,7 +56,7 @@ export function LoginPage({ onLogin }: LoginPageProps) {
         {/* Logo and Title */}
         <div className="text-center mb-8">
           <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl overflow-hidden bg-accent/20 mb-4">
-            <Image src="/logo.png" alt="Nixar" width={56} height={56} className="object-contain" />
+            <Image src="/56.png" alt="Nixar" width={56} height={56} className="object-contain" />
           </div>
           <h1 className="text-3xl font-bold text-foreground mb-4">Nixar</h1>
           <p className="text-muted-foreground">

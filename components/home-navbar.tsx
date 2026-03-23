@@ -11,7 +11,7 @@ export function HomeNavbar() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
         <Link href="/" className="flex items-center gap-2 hover:opacity-90 transition-opacity">
           <div className="w-9 h-9 rounded-xl overflow-hidden flex items-center justify-center bg-accent/20">
-            <Image src="/logo.png" alt="Nixar" width={36} height={36} className="object-contain" />
+            <Image src="/36.png" alt="Nixar" width={36} height={36} className="object-contain" />
           </div>
           <span className="font-bold text-lg text-foreground">Nixar</span>
         </Link>
