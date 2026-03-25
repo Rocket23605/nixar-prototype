@@ -16,17 +16,17 @@ export default function HomePage() {
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 pt-20 pb-24 sm:pt-28 sm:pb-32">
           <div className="text-center max-w-4xl mx-auto">
             <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold text-foreground tracking-tight mb-6">
-              Learn by doing
+              เรียนรู้ด้วยการลงมือทำ
             </h1>
             <p className="text-xl sm:text-2xl text-muted-foreground mb-10 max-w-2xl mx-auto">
-              Interactive problem solving that&apos;s effective and fun. Excel in math with AI-powered analytics.
+              แก้โจทย์แบบโต้ตอบที่ได้ผลและสนุก พัฒนาคณิตศาสตร์ด้วยการวิเคราะห์จาก AI
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Button asChild size="lg" className="bg-accent hover:bg-accent/90 text-accent-foreground text-base px-8">
-                <Link href="/login">I&apos;m a learner</Link>
+                <Link href="/login">ฉันเป็นผู้เรียน</Link>
               </Button>
               <Button asChild variant="outline" size="lg" className="text-base px-8">
-                <Link href="/login">I&apos;m a parent or teacher</Link>
+                <Link href="/login">ฉันเป็นผู้ปกครองหรือครู</Link>
               </Button>
             </div>
           </div>
@@ -38,9 +38,9 @@ export default function HomePage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             {[
-              { icon: Brain, label: "Math", href: "/login" },
-              { icon: Sparkles, label: "AI Analytics", href: "/login" },
-              { icon: Target, label: "Practice", href: "/login" },
+              { icon: Brain, label: "คณิตศาสตร์", href: "/login" },
+              { icon: Sparkles, label: "วิเคราะห์ด้วย AI", href: "/login" },
+              { icon: Target, label: "ฝึกฝน", href: "/login" },
               { icon: BookOpen, label: "A-Level", href: "/login" },
             ].map(({ icon: Icon, label, href }) => (
               <Link
@@ -62,10 +62,10 @@ export default function HomePage() {
       <section className="py-16 bg-muted/30">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 text-center">
           <h2 className="text-2xl sm:text-3xl font-bold text-foreground mb-4">
-            Join learners preparing for A-Level
+            ร่วมกับผู้เรียนที่กำลังเตรียมสอบ A-Level
           </h2>
           <p className="text-muted-foreground mb-8">
-            AI-powered performance analytics and personalized learning paths
+            วิเคราะห์ผลการเรียนด้วย AI และเส้นทางการเรียนรู้เฉพาะบุคคล
           </p>
         </div>
       </section>
@@ -78,27 +78,27 @@ export default function HomePage() {
               <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-accent/20 mb-4">
                 <Sparkles className="w-7 h-7 text-accent" />
               </div>
-              <h3 className="text-xl font-semibold text-foreground mb-2">Concepts that click</h3>
+              <h3 className="text-xl font-semibold text-foreground mb-2">แนวคิดที่เข้าใจง่าย</h3>
               <p className="text-muted-foreground">
-                Step-by-step interactive lessons make even complex ideas feel intuitive. Custom, intelligent feedback catches mistakes as you learn.
+                บทเรียนแบบโต้ตอบทีละขั้นช่วยให้แม้แนวคิดซับซ้อนก็รู้สึกเข้าใจได้ คำติชมอัจฉริยะช่วยจับข้อผิดพลาดขณะเรียนรู้
               </p>
             </div>
             <div className="text-center md:text-left">
               <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-accent/20 mb-4">
                 <TrendingUp className="w-7 h-7 text-accent" />
               </div>
-              <h3 className="text-xl font-semibold text-foreground mb-2">Personalized learning</h3>
+              <h3 className="text-xl font-semibold text-foreground mb-2">การเรียนรู้เฉพาะบุคคล</h3>
               <p className="text-muted-foreground">
-                Nixar tracks the concepts you&apos;ve mastered, designs practice sets based on your progress, and adapts to your pace.
+                Nixar ติดตามแนวคิดที่คุณเชี่ยวชาญ ออกแบบชุดฝึกจากความคืบหน้า และปรับให้เหมาะกับจังหวะของคุณ
               </p>
             </div>
             <div className="text-center md:text-left">
               <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-accent/20 mb-4">
                 <Award className="w-7 h-7 text-accent" />
               </div>
-              <h3 className="text-xl font-semibold text-foreground mb-2">Guided lessons</h3>
+              <h3 className="text-xl font-semibold text-foreground mb-2">บทเรียนแบบมีแนวทาง</h3>
               <p className="text-muted-foreground">
-                Stay on track, see your progress, and build your problem solving skills one concept at a time.
+                ติดตามเป้าหมาย เห็นความคืบหน้า และสร้างทักษะการแก้ปัญหาทีละแนวคิด
               </p>
             </div>
           </div>
@@ -109,13 +109,13 @@ export default function HomePage() {
       <section className="py-24 bg-accent/10 border-t border-border">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 text-center">
           <h2 className="text-3xl sm:text-4xl font-bold text-foreground mb-4">
-            Everyone is a math person
+            ทุกคนเรียนคณิตศาสตร์ได้
           </h2>
           <p className="text-muted-foreground mb-8 max-w-xl mx-auto">
-            Join learners preparing for A-Level with interactive problem solving.
+            ร่วมกับผู้เรียนที่เตรียมสอบ A-Level ด้วยการแก้โจทย์แบบโต้ตอบ
           </p>
           <Button asChild size="lg" className="bg-accent hover:bg-accent/90 text-accent-foreground text-base px-10">
-            <Link href="/login">Get started for free</Link>
+            <Link href="/login">เริ่มใช้ฟรี</Link>
           </Button>
         </div>
       </section>
@@ -123,7 +123,7 @@ export default function HomePage() {
       {/* Footer */}
       <footer className="py-8 border-t border-border">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 text-center text-sm text-muted-foreground">
-          <p>Nixar - AI-Powered A-Level Math Platform</p>
+          <p>Nixar — แพลตฟอร์มคณิตศาสตร์ A-Level ขับเคลื่อนด้วย AI</p>
         </div>
       </footer>
     </div>

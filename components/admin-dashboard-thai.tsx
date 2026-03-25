@@ -50,7 +50,7 @@ const KPI_DATA = [
 
 const EXAM_AVERAGE_DATA = [
   { examSet: "ชุด 1", title: "ข้อสอบ A-Level คณิตศาสตร์ ชุด 1", avgScore: 65 },
-  { examSet: "ชุด 2", title: "ข้อสอบ A-Level คณิตศาสตร์ ชุด 2", avgScore: 72 },
+  { examSet: "ชุด 2", title: "ข้อสอบ A-Level คณิตศาสตร์ ชุด 2", avgScore: 52 },
   { examSet: "ชุด 3", title: "ข้อสอบ A-Level คณิตศาสตร์ ชุด 3", avgScore: 58 },
 ]
 
