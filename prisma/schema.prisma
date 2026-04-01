@@ -1,0 +1,113 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum UserRole {
+  STUDENT
+  ADMIN
+  TEACHER
+
+  @@map("user_role")
+}
+
+model User {
+  id          String       @id @default(dbgenerated("(gen_random_uuid())::text"))
+  email       String       @unique
+  username    String       @unique
+  password    String
+  displayName String       @map("display_name")
+  role        UserRole     @default(STUDENT)
+  createdAt   DateTime     @default(now()) @map("created_at")
+  attempts    ExamAttempt[]
+
+  @@map("users")
+}
+
+model ExamSet {
+  id           String       @id @default(dbgenerated("(gen_random_uuid())::text"))
+  title        String
+  subject      String
+  level        String
+  description  String?
+  durationMins Int          @map("duration_mins")
+  isPublished  Boolean      @default(false) @map("is_published")
+  pdfUrl       String?      @map("pdf_url")
+  pdfFileName  String?      @map("pdf_file_name")
+  createdAt    DateTime     @default(now()) @map("created_at")
+  questions    Question[]
+  attempts     ExamAttempt[]
+
+  @@map("exam_sets")
+}
+
+model Question {
+  id            String    @id @default(dbgenerated("(gen_random_uuid())::text"))
+  examSetId     String    @map("exam_set_id")
+  order         Int
+  category      String
+  questionText  String    @map("question_text")
+  imageUrl      String?   @map("image_url")
+  correctAnswer String    @map("correct_answer")
+  explanation   String?
+  examSet       ExamSet   @relation(fields: [examSetId], references: [id], onDelete: Cascade)
+  choices       Choice[]
+  answers       Answer[]
+
+  @@map("questions")
+}
+
+model Choice {
+  id         String   @id @default(dbgenerated("(gen_random_uuid())::text"))
+  questionId String   @map("question_id")
+  key        String
+  value      String
+  question   Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
+
+  @@map("choices")
+}
+
+model ExamAttempt {
+  id          String    @id @default(dbgenerated("(gen_random_uuid())::text"))
+  userId      String    @map("user_id")
+  examSetId   String    @map("exam_set_id")
+  startedAt   DateTime  @default(now()) @map("started_at")
+  submittedAt DateTime? @map("submitted_at")
+  score       Int?
+  totalScore  Int?      @map("total_score")
+  pdfUrl      String?   @map("pdf_url")
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  examSet     ExamSet   @relation(fields: [examSetId], references: [id], onDelete: Cascade)
+  answers     Answer[]
+  aiReport    AiReport?
+
+  @@map("exam_attempts")
+}
+
+model Answer {
+  id          String      @id @default(dbgenerated("(gen_random_uuid())::text"))
+  attemptId   String      @map("attempt_id")
+  questionId  String      @map("question_id")
+  selectedKey String?     @map("selected_key")
+  isCorrect   Boolean?    @map("is_correct")
+  attempt     ExamAttempt @relation(fields: [attemptId], references: [id], onDelete: Cascade)
+  question    Question    @relation(fields: [questionId], references: [id], onDelete: Cascade)
+
+  @@map("answers")
+}
+
+model AiReport {
+  id          String      @id @default(dbgenerated("(gen_random_uuid())::text"))
+  attemptId   String      @unique @map("attempt_id")
+  summary     String
+  strengths   String[]    @default([])
+  weaknesses  String[]    @default([])
+  suggestions String[]    @default([])
+  createdAt   DateTime    @default(now()) @map("created_at")
+  attempt     ExamAttempt @relation(fields: [attemptId], references: [id], onDelete: Cascade)
+
+  @@map("ai_reports")
+}

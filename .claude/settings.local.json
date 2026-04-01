@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(node -e ':*)",
+      "Bash(node -e \"const d=require\\('C:/Users/Admin/.claude.json'\\); console.log\\(JSON.stringify\\(d.mcpServers, null, 2\\)\\)\")",
+      "Bash(npx prisma:*)",
+      "mcp__supabase__list_tables"
+    ]
+  }
+}
