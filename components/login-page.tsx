@@ -6,20 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { Eye, EyeOff, AlertCircle } from "lucide-react"
-
-interface User {
-  username: string
-  password: string
-  role: "student" | "admin"
-  displayName: string
-}
-
-const DEMO_USERS: User[] = [
-  { username: "student1", password: "1234", role: "student", displayName: "น้องมิน" },
-  { username: "student2", password: "1234", role: "student", displayName: "น้องโอม" },
-  { username: "student3", password: "1234", role: "student", displayName: "น้องเฟิร์น" },
-  { username: "admin", password: "admin", role: "admin", displayName: "ผู้ดูแลระบบ" },
-]
+import type { User } from "@/lib/auth-context"
 
 interface LoginPageProps {
   onLogin: (user: User) => void
@@ -36,18 +23,30 @@ export function LoginPage({ onLogin }: LoginPageProps) {
     setError("")
     setIsLoading(true)
 
-    await new Promise((resolve) => setTimeout(resolve, 800))
+    try {
+      const res = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username, password }),
+      })
 
-    const user = DEMO_USERS.find(
-      (u) => u.username === username && u.password === password
-    )
+      const data = await res.json()
 
-    if (user) {
-      onLogin(user)
-    } else {
-      setError("ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง")
+      if (!res.ok) {
+        setError(data.error || "ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง")
+      } else {
+        onLogin({
+          id: data.id,
+          username: data.username,
+          role: data.role as "student" | "admin",
+          displayName: data.displayName,
+        })
+      }
+    } catch {
+      setError("เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง")
+    } finally {
+      setIsLoading(false)
     }
-    setIsLoading(false)
   }
 
   return (

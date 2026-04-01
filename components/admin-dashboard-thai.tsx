@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect, useRef } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import {
@@ -12,6 +12,7 @@ import {
   AlertTriangle,
   Lightbulb,
   BarChart3,
+  Loader2,
 } from "lucide-react"
 import {
   BarChart,
@@ -25,33 +26,9 @@ import {
 } from "recharts"
 
 const KPI_DATA = [
-  {
-    title: "จำนวนนักเรียนทั้งหมด",
-    value: "2,847",
-    change: "+12.5%",
-    isPositive: true,
-    icon: Users,
-  },
-  {
-    title: "ข้อสอบที่ทำแล้ว",
-    value: "1,284",
-    change: "+8.3%",
-    isPositive: true,
-    icon: FileText,
-  },
-  {
-    title: "รายงาน AI ที่สร้าง",
-    value: "923",
-    change: "+18.7%",
-    isPositive: true,
-    icon: Brain,
-  },
-]
-
-const EXAM_AVERAGE_DATA = [
-  { examSet: "ชุด 1", title: "ข้อสอบ A-Level คณิตศาสตร์ ชุด 1", avgScore: 65 },
-  { examSet: "ชุด 2", title: "ข้อสอบ A-Level คณิตศาสตร์ ชุด 2", avgScore: 52 },
-  { examSet: "ชุด 3", title: "ข้อสอบ A-Level คณิตศาสตร์ ชุด 3", avgScore: 58 },
+  { title: "จำนวนนักเรียนทั้งหมด", value: "2,847", change: "+12.5%", isPositive: true, icon: Users },
+  { title: "ข้อสอบที่ทำแล้ว", value: "1,284", change: "+8.3%", isPositive: true, icon: FileText },
+  { title: "รายงาน AI ที่สร้าง", value: "923", change: "+18.7%", isPositive: true, icon: Brain },
 ]
 
 const ERROR_RATE_DATA = [
@@ -70,16 +47,81 @@ const RECENT_STUDENTS = [
   { name: "น้องบีม", exam: "ชุด 2", score: "88%", weakness: "-", date: "2 วันก่อน" },
 ]
 
-export function AdminDashboardThai() {
-  const [uploadStatus, setUploadStatus] = useState<"idle" | "uploading" | "success">("idle")
+interface ExamItem {
+  id: string
+  title: string
+  pdfUrl: string | null
+  pdfFileName: string | null
+}
 
-  const handleUpload = () => {
+export function AdminDashboardThai() {
+  const [exams, setExams] = useState<ExamItem[]>([])
+  const [selectedExamId, setSelectedExamId] = useState("")
+  const [uploadStatus, setUploadStatus] = useState<"idle" | "uploading" | "success" | "error">("idle")
+  const [uploadError, setUploadError] = useState("")
+  const [uploadedFileName, setUploadedFileName] = useState("")
+  const fileInputRef = useRef<HTMLInputElement>(null)
+
+  useEffect(() => {
+    fetch("/api/admin/exams")
+      .then((r) => r.json())
+      .then((data: ExamItem[]) => {
+        setExams(data)
+        if (data.length > 0) setSelectedExamId(data[0].id)
+      })
+      .catch(() => {})
+  }, [])
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    if (!selectedExamId) {
+      setUploadError("กรุณาเลือกชุดข้อสอบก่อน")
+      return
+    }
+
     setUploadStatus("uploading")
-    setTimeout(() => {
-      setUploadStatus("success")
-      setTimeout(() => setUploadStatus("idle"), 3000)
-    }, 2000)
+    setUploadError("")
+
+    const formData = new FormData()
+    formData.append("file", file)
+    formData.append("examSetId", selectedExamId)
+    formData.append("type", "exam-pdfs")
+
+    try {
+      const res = await fetch("/api/admin/upload", {
+        method: "POST",
+        body: formData,
+      })
+      const data = await res.json()
+
+      if (!res.ok) {
+        setUploadStatus("error")
+        setUploadError(data.error || "อัปโหลดไม่สำเร็จ")
+      } else {
+        setUploadStatus("success")
+        setUploadedFileName(data.fileName)
+        // Update local exam list
+        setExams((prev) =>
+          prev.map((ex) =>
+            ex.id === selectedExamId
+              ? { ...ex, pdfUrl: data.url, pdfFileName: data.fileName }
+              : ex
+          )
+        )
+        setTimeout(() => setUploadStatus("idle"), 4000)
+      }
+    } catch {
+      setUploadStatus("error")
+      setUploadError("เกิดข้อผิดพลาด กรุณาลองใหม่")
+    }
+
+    // Reset file input
+    if (fileInputRef.current) fileInputRef.current.value = ""
   }
+
+  const selectedExam = exams.find((e) => e.id === selectedExamId)
 
   return (
     <div className="min-h-screen bg-background p-4 md:p-8">
@@ -89,9 +131,7 @@ export function AdminDashboardThai() {
           <h1 className="text-2xl md:text-3xl font-bold text-foreground mb-2">
             แดชบอร์ดผู้ดูแลระบบ
           </h1>
-          <p className="text-muted-foreground">
-            ภาพรวมสถิติและการวิเคราะห์ข้อมูลนักเรียน
-          </p>
+          <p className="text-muted-foreground">ภาพรวมสถิติและการวิเคราะห์ข้อมูลนักเรียน</p>
         </div>
 
         {/* KPI Cards */}
@@ -103,11 +143,7 @@ export function AdminDashboardThai() {
                   <div>
                     <p className="text-sm text-muted-foreground mb-1">{kpi.title}</p>
                     <p className="text-2xl font-bold text-foreground">{kpi.value}</p>
-                    <span
-                      className={`text-sm ${
-                        kpi.isPositive ? "text-success" : "text-destructive"
-                      }`}
-                    >
+                    <span className={`text-sm ${kpi.isPositive ? "text-success" : "text-destructive"}`}>
                       {kpi.change}
                     </span>
                   </div>
@@ -119,48 +155,6 @@ export function AdminDashboardThai() {
             </Card>
           ))}
         </div>
-
-        {/* คะแนนเฉลี่ยแต่ละชุดข้อสอบ */}
-        <Card className="border-border/50 bg-card/50">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-foreground">
-              <BarChart3 className="w-5 h-5 text-accent" />
-              คะแนนเฉลี่ยแต่ละชุดข้อสอบ
-            </CardTitle>
-            <p className="text-sm text-muted-foreground mt-1">
-              คะแนนเฉลี่ยของนักเรียนที่ทำข้อสอบแต่ละชุด
-            </p>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              {EXAM_AVERAGE_DATA.map((exam) => (
-                <div
-                  key={exam.examSet}
-                  className="p-4 rounded-xl border border-border bg-background/50"
-                >
-                  <p className="text-sm font-medium text-foreground mb-3">
-                    {exam.title}
-                  </p>
-                  <span
-                    className={`text-2xl font-bold ${
-                      exam.avgScore >= 60 ? "text-success" : "text-warning"
-                    }`}
-                  >
-                    {exam.avgScore}%
-                  </span>
-                  <div className="mt-2 h-2 rounded-full bg-muted overflow-hidden">
-                    <div
-                      className={`h-full rounded-full transition-all ${
-                        exam.avgScore >= 60 ? "bg-success" : "bg-warning"
-                      }`}
-                      style={{ width: `${exam.avgScore}%` }}
-                    />
-                  </div>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Error Rate Chart */}
@@ -176,32 +170,9 @@ export function AdminDashboardThai() {
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart data={ERROR_RATE_DATA} layout="vertical">
                     <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
-                    <XAxis
-                      type="number"
-                      domain={[0, 100]}
-                      tickFormatter={(value) => `${value}%`}
-                      stroke="var(--foreground)"
-                      tick={{ fill: "var(--foreground)", fontSize: 12 }}
-                      tickLine={{ stroke: "var(--foreground)" }}
-                    />
-                    <YAxis
-                      type="category"
-                      dataKey="topic"
-                      stroke="var(--foreground)"
-                      tick={{ fill: "var(--foreground)", fontSize: 12 }}
-                      tickLine={{ stroke: "var(--foreground)" }}
-                      width={80}
-                    />
-                    <Tooltip
-                      contentStyle={{
-                        backgroundColor: "var(--card)",
-                        border: "1px solid var(--border)",
-                        borderRadius: "8px",
-                      }}
-                      labelStyle={{ color: "var(--foreground)" }}
-                      itemStyle={{ color: "var(--foreground)" }}
-                      formatter={(value: number) => [`${value}%`, "อัตราการทำผิด"]}
-                    />
+                    <XAxis type="number" domain={[0, 100]} tickFormatter={(v) => `${v}%`} stroke="var(--foreground)" tick={{ fill: "var(--foreground)", fontSize: 12 }} tickLine={{ stroke: "var(--foreground)" }} />
+                    <YAxis type="category" dataKey="topic" stroke="var(--foreground)" tick={{ fill: "var(--foreground)", fontSize: 12 }} tickLine={{ stroke: "var(--foreground)" }} width={80} />
+                    <Tooltip contentStyle={{ backgroundColor: "var(--card)", border: "1px solid var(--border)", borderRadius: "8px" }} labelStyle={{ color: "var(--foreground)" }} itemStyle={{ color: "var(--foreground)" }} formatter={(value: number) => [`${value}%`, "อัตราการทำผิด"]} />
                     <Bar dataKey="rate" radius={[0, 4, 4, 0]}>
                       {ERROR_RATE_DATA.map((entry, index) => (
                         <Cell key={`cell-${index}`} fill={entry.color} />
@@ -235,47 +206,25 @@ export function AdminDashboardThai() {
                 <table className="w-full">
                   <thead>
                     <tr className="border-b border-border">
-                      <th className="text-left py-3 px-2 text-sm font-medium text-muted-foreground">
-                        ชื่อ
-                      </th>
-                      <th className="text-left py-3 px-2 text-sm font-medium text-muted-foreground">
-                        ชุดข้อสอบ
-                      </th>
-                      <th className="text-left py-3 px-2 text-sm font-medium text-muted-foreground">
-                        คะแนน
-                      </th>
-                      <th className="text-left py-3 px-2 text-sm font-medium text-muted-foreground">
-                        จุดอ่อน
-                      </th>
-                      <th className="text-left py-3 px-2 text-sm font-medium text-muted-foreground">
-                        วันที่
-                      </th>
+                      <th className="text-left py-3 px-2 text-sm font-medium text-muted-foreground">ชื่อ</th>
+                      <th className="text-left py-3 px-2 text-sm font-medium text-muted-foreground">ชุดข้อสอบ</th>
+                      <th className="text-left py-3 px-2 text-sm font-medium text-muted-foreground">คะแนน</th>
+                      <th className="text-left py-3 px-2 text-sm font-medium text-muted-foreground">จุดอ่อน</th>
+                      <th className="text-left py-3 px-2 text-sm font-medium text-muted-foreground">วันที่</th>
                     </tr>
                   </thead>
                   <tbody>
                     {RECENT_STUDENTS.map((student, idx) => (
                       <tr key={idx} className="border-b border-border/50 last:border-0">
-                        <td className="py-3 px-2 text-sm text-foreground font-medium">
-                          {student.name}
-                        </td>
-                        <td className="py-3 px-2 text-sm text-muted-foreground">
-                          {student.exam}
-                        </td>
+                        <td className="py-3 px-2 text-sm text-foreground font-medium">{student.name}</td>
+                        <td className="py-3 px-2 text-sm text-muted-foreground">{student.exam}</td>
                         <td className="py-3 px-2">
-                          <span
-                            className={`text-sm font-medium ${
-                              parseInt(student.score) >= 60 ? "text-success" : "text-destructive"
-                            }`}
-                          >
+                          <span className={`text-sm font-medium ${parseInt(student.score) >= 60 ? "text-success" : "text-destructive"}`}>
                             {student.score}
                           </span>
                         </td>
-                        <td className="py-3 px-2 text-sm text-muted-foreground">
-                          {student.weakness}
-                        </td>
-                        <td className="py-3 px-2 text-sm text-muted-foreground">
-                          {student.date}
-                        </td>
+                        <td className="py-3 px-2 text-sm text-muted-foreground">{student.weakness}</td>
+                        <td className="py-3 px-2 text-sm text-muted-foreground">{student.date}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -285,22 +234,55 @@ export function AdminDashboardThai() {
           </Card>
         </div>
 
-        {/* Upload Section */}
+        {/* PDF Upload Section */}
         <Card className="border-border/50 bg-card/50">
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-foreground">
               <Upload className="w-5 h-5 text-accent" />
-              อัปโหลดข้อสอบใหม่
+              อัปโหลด PDF ข้อสอบ
             </CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="space-y-4">
+            {/* Exam Selector */}
+            <div>
+              <label className="text-sm font-medium text-foreground block mb-2">
+                เลือกชุดข้อสอบ
+              </label>
+              {exams.length === 0 ? (
+                <p className="text-sm text-muted-foreground">ยังไม่มีชุดข้อสอบในระบบ</p>
+              ) : (
+                <select
+                  value={selectedExamId}
+                  onChange={(e) => setSelectedExamId(e.target.value)}
+                  className="w-full px-3 py-2 rounded-lg border border-border bg-background text-foreground text-sm focus:outline-none focus:ring-1 focus:ring-accent"
+                >
+                  {exams.map((exam) => (
+                    <option key={exam.id} value={exam.id}>
+                      {exam.title}
+                    </option>
+                  ))}
+                </select>
+              )}
+            </div>
+
+            {/* Current PDF Status */}
+            {selectedExam?.pdfUrl && (
+              <div className="flex items-center gap-2 text-sm text-success bg-success/10 border border-success/30 rounded-lg px-3 py-2">
+                <CheckCircle2 className="w-4 h-4 shrink-0" />
+                PDF ปัจจุบัน: {selectedExam.pdfFileName || "exam-document.pdf"}
+              </div>
+            )}
+
+            {/* Drop Zone */}
             <div
-              onClick={handleUpload}
+              onClick={() => uploadStatus === "idle" && fileInputRef.current?.click()}
               className={`border-2 border-dashed rounded-xl p-8 text-center cursor-pointer transition-all ${
                 uploadStatus === "success"
-                  ? "border-success/50 bg-success/5"
+                  ? "border-success/50 bg-success/5 cursor-default"
                   : uploadStatus === "uploading"
-                  ? "border-accent/50 bg-accent/5"
+                  ? "border-accent/50 bg-accent/5 cursor-default"
+                  : uploadStatus === "error"
+                  ? "border-destructive/50 bg-destructive/5"
                   : "border-border hover:border-accent/50 hover:bg-accent/5"
               }`}
             >
@@ -308,13 +290,11 @@ export function AdminDashboardThai() {
                 <div className="flex flex-col items-center">
                   <CheckCircle2 className="w-12 h-12 text-success mb-4" />
                   <p className="text-foreground font-medium">อัปโหลดสำเร็จ!</p>
-                  <p className="text-sm text-muted-foreground">
-                    ข้อสอบถูกเพิ่มเข้าระบบเรียบร้อยแล้ว
-                  </p>
+                  <p className="text-sm text-muted-foreground mt-1">{uploadedFileName}</p>
                 </div>
               ) : uploadStatus === "uploading" ? (
                 <div className="flex flex-col items-center">
-                  <div className="w-12 h-12 border-4 border-accent border-t-transparent rounded-full animate-spin mb-4" />
+                  <Loader2 className="w-12 h-12 text-accent mb-4 animate-spin" />
                   <p className="text-foreground font-medium">กำลังอัปโหลด...</p>
                   <p className="text-sm text-muted-foreground">กรุณารอสักครู่</p>
                 </div>
@@ -322,14 +302,51 @@ export function AdminDashboardThai() {
                 <div className="flex flex-col items-center">
                   <Upload className="w-12 h-12 text-muted-foreground mb-4" />
                   <p className="text-foreground font-medium mb-1">
-                    ลากไฟล์มาวางที่นี่ หรือคลิกเพื่อเลือก
+                    คลิกเพื่อเลือกไฟล์ PDF
                   </p>
-                  <p className="text-sm text-muted-foreground">
-                    รองรับไฟล์ PDF, DOCX (สูงสุด 10MB)
-                  </p>
+                  <p className="text-sm text-muted-foreground">รองรับ PDF สูงสุด 10MB</p>
+                  {uploadStatus === "error" && (
+                    <p className="text-sm text-destructive mt-2">{uploadError}</p>
+                  )}
                 </div>
               )}
             </div>
+
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept=".pdf"
+              className="hidden"
+              onChange={handleFileChange}
+            />
+
+            {/* Exam List with PDF Status */}
+            {exams.length > 0 && (
+              <div className="mt-4">
+                <h4 className="text-sm font-medium text-foreground mb-3 flex items-center gap-2">
+                  <BarChart3 className="w-4 h-4 text-accent" />
+                  สถานะ PDF ชุดข้อสอบทั้งหมด
+                </h4>
+                <div className="space-y-2">
+                  {exams.map((exam) => (
+                    <div
+                      key={exam.id}
+                      className="flex items-center justify-between p-3 rounded-lg bg-secondary/30 border border-border/50"
+                    >
+                      <span className="text-sm text-foreground truncate flex-1 mr-3">{exam.title}</span>
+                      {exam.pdfUrl ? (
+                        <span className="flex items-center gap-1 text-xs text-success shrink-0">
+                          <CheckCircle2 className="w-3.5 h-3.5" />
+                          มี PDF
+                        </span>
+                      ) : (
+                        <span className="text-xs text-muted-foreground shrink-0">ยังไม่มี PDF</span>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </CardContent>
         </Card>
       </div>

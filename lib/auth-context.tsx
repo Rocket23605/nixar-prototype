@@ -3,8 +3,8 @@
 import React, { createContext, useContext, useState, useCallback } from "react"
 
 export interface User {
+  id: string
   username: string
-  password: string
   role: "student" | "admin"
   displayName: string
 }

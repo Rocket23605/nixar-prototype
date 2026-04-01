@@ -1,16 +1,16 @@
 "use client"
 
+import { useEffect, useState } from "react"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { FileText, CheckCircle2, Clock, ChevronRight } from "lucide-react"
+import { FileText, CheckCircle2, Clock, ChevronRight, Loader2 } from "lucide-react"
 
 interface ExamSet {
   id: string
   title: string
   questionCount: number
-  duration: string
-  status: "not_started" | "completed"
-  score?: number
+  durationMins: number
+  pdfUrl: string | null
 }
 
 interface ExamSelectionProps {
@@ -18,32 +18,24 @@ interface ExamSelectionProps {
   onSelectExam: (examId: string) => void
 }
 
-const EXAM_SETS: ExamSet[] = [
-  {
-    id: "exam1",
-    title: "ข้อสอบ A-Level คณิตศาสตร์ ชุด 1",
-    questionCount: 5,
-    duration: "45 นาที",
-    status: "completed",
-    score: 60,
-  },
-  {
-    id: "exam2",
-    title: "ข้อสอบ A-Level คณิตศาสตร์ ชุด 2",
-    questionCount: 5,
-    duration: "45 นาที",
-    status: "not_started",
-  },
-  {
-    id: "exam3",
-    title: "ข้อสอบ A-Level คณิตศาสตร์ ชุด 3",
-    questionCount: 5,
-    duration: "45 นาที",
-    status: "not_started",
-  },
-]
-
 export function ExamSelection({ studentName, onSelectExam }: ExamSelectionProps) {
+  const [exams, setExams] = useState<ExamSet[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState("")
+
+  useEffect(() => {
+    fetch("/api/exams")
+      .then((r) => r.json())
+      .then((data) => {
+        setExams(data)
+        setLoading(false)
+      })
+      .catch(() => {
+        setError("โหลดข้อสอบไม่สำเร็จ กรุณาลองใหม่")
+        setLoading(false)
+      })
+  }, [])
+
   return (
     <div className="min-h-screen bg-background p-4 md:p-8">
       <div className="max-w-3xl mx-auto">
@@ -52,10 +44,9 @@ export function ExamSelection({ studentName, onSelectExam }: ExamSelectionProps)
           <h1 className="text-2xl md:text-3xl font-bold text-foreground mb-2">
             สวัสดี {studentName}!
           </h1>
-          <p className="text-muted-foreground">
-            เลือกชุดข้อสอบที่ต้องการทำ
-          </p>
+          <p className="text-muted-foreground">เลือกชุดข้อสอบที่ต้องการทำ</p>
         </div>
+
         {/* Tips */}
         <Card className="mt-8 border-accent/30 bg-accent/5">
           <CardContent className="p-4 md:p-6">
@@ -72,8 +63,25 @@ export function ExamSelection({ studentName, onSelectExam }: ExamSelectionProps)
         </Card>
 
         {/* Exam List */}
-        <div className="space-y-4">
-          {EXAM_SETS.map((exam) => (
+        <div className="space-y-4 mt-6">
+          {loading && (
+            <div className="flex items-center justify-center py-16 text-muted-foreground gap-2">
+              <Loader2 className="w-5 h-5 animate-spin" />
+              กำลังโหลดข้อสอบ...
+            </div>
+          )}
+
+          {error && (
+            <div className="text-center py-16 text-destructive">{error}</div>
+          )}
+
+          {!loading && !error && exams.length === 0 && (
+            <div className="text-center py-16 text-muted-foreground">
+              ยังไม่มีข้อสอบที่เผยแพร่แล้ว
+            </div>
+          )}
+
+          {exams.map((exam) => (
             <Card
               key={exam.id}
               className="border-border/50 bg-card/50 hover:bg-card/80 transition-all duration-200 group"
@@ -81,18 +89,8 @@ export function ExamSelection({ studentName, onSelectExam }: ExamSelectionProps)
               <CardContent className="p-4 md:p-6">
                 <div className="flex items-center gap-4">
                   {/* Icon */}
-                  <div
-                    className={`w-12 h-12 rounded-xl flex items-center justify-center shrink-0 ${
-                      exam.status === "completed"
-                        ? "bg-success/20"
-                        : "bg-accent/20"
-                    }`}
-                  >
-                    {exam.status === "completed" ? (
-                      <CheckCircle2 className="w-6 h-6 text-success" />
-                    ) : (
-                      <FileText className="w-6 h-6 text-accent" />
-                    )}
+                  <div className="w-12 h-12 rounded-xl flex items-center justify-center shrink-0 bg-accent/20">
+                    <FileText className="w-6 h-6 text-accent" />
                   </div>
 
                   {/* Content */}
@@ -107,34 +105,24 @@ export function ExamSelection({ studentName, onSelectExam }: ExamSelectionProps)
                       </span>
                       <span className="flex items-center gap-1">
                         <Clock className="w-3.5 h-3.5" />
-                        {exam.duration}
+                        {exam.durationMins} นาที
                       </span>
+                      {exam.pdfUrl && (
+                        <span className="flex items-center gap-1 text-accent">
+                          <CheckCircle2 className="w-3.5 h-3.5" />
+                          มีไฟล์ PDF
+                        </span>
+                      )}
                     </div>
                   </div>
 
-                  {/* Status & Action */}
-                  <div className="flex items-center gap-3 shrink-0">
-                    {exam.status === "completed" ? (
-                      <div className="text-right">
-                        <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-success/20 text-success text-sm font-medium">
-                          ทำแล้ว ({exam.score}%)
-                        </span>
-                      </div>
-                    ) : (
-                      <span className="hidden md:inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-secondary text-muted-foreground text-sm">
-                        ยังไม่ทำ
-                      </span>
-                    )}
+                  {/* Action */}
+                  <div className="shrink-0">
                     <Button
                       onClick={() => onSelectExam(exam.id)}
-                      variant={exam.status === "completed" ? "outline" : "default"}
-                      className={
-                        exam.status === "completed"
-                          ? "border-border hover:bg-secondary"
-                          : "bg-accent hover:bg-accent/90 text-accent-foreground"
-                      }
+                      className="bg-accent hover:bg-accent/90 text-accent-foreground"
                     >
-                      {exam.status === "completed" ? "ทำอีกครั้ง" : "เริ่มทำข้อสอบ"}
+                      เริ่มทำข้อสอบ
                       <ChevronRight className="w-4 h-4 ml-1" />
                     </Button>
                   </div>
@@ -143,7 +131,6 @@ export function ExamSelection({ studentName, onSelectExam }: ExamSelectionProps)
             </Card>
           ))}
         </div>
-
       </div>
     </div>
   )

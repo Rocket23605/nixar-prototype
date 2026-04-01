@@ -4,111 +4,87 @@ import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Progress } from "@/components/ui/progress"
-import { Clock, ChevronLeft, ChevronRight, Send, AlertCircle } from "lucide-react"
+import { Clock, ChevronLeft, ChevronRight, Send, AlertCircle, FileText, X } from "lucide-react"
+import { PdfViewer } from "@/components/pdf-viewer"
 
-interface Question {
-  id: number
-  category: string
-  categoryColor: string
-  question: string
-  options: { key: string; value: string }[]
-  correctAnswer: string
+interface Choice {
+  id: string
+  key: string
+  value: string
 }
 
-const QUESTIONS: Question[] = [
-  {
-    id: 1,
-    category: "แคลคูลัส",
-    categoryColor: "bg-chart-1/20 text-chart-1",
-    question: "จงหาอนุพันธ์ของ f(x) = 3x³ + 2x² - 5x + 1",
-    options: [
-      { key: "A", value: "f'(x) = 9x² + 4x - 5" },
-      { key: "B", value: "f'(x) = 9x² + 2x - 5" },
-      { key: "C", value: "f'(x) = 3x² + 4x - 5" },
-      { key: "D", value: "f'(x) = 9x² + 4x + 5" },
-    ],
-    correctAnswer: "A",
-  },
-  {
-    id: 2,
-    category: "แคลคูลัส",
-    categoryColor: "bg-chart-1/20 text-chart-1",
-    question: "จงหาค่า ∫(2x + 3)dx",
-    options: [
-      { key: "A", value: "x² + 3x + C" },
-      { key: "B", value: "2x² + 3x + C" },
-      { key: "C", value: "x² + 3 + C" },
-      { key: "D", value: "2x + 3 + C" },
-    ],
-    correctAnswer: "A",
-  },
-  {
-    id: 3,
-    category: "พีชคณิต",
-    categoryColor: "bg-chart-2/20 text-chart-2",
-    question: "ถ้า x² - 5x + 6 = 0 แล้ว ค่า x ที่เป็นไปได้คือ",
-    options: [
-      { key: "A", value: "x = 1 หรือ x = 6" },
-      { key: "B", value: "x = 2 หรือ x = 3" },
-      { key: "C", value: "x = -2 หรือ x = -3" },
-      { key: "D", value: "x = 1 หรือ x = 5" },
-    ],
-    correctAnswer: "B",
-  },
-  {
-    id: 4,
-    category: "ตรีโกณมิติ",
-    categoryColor: "bg-chart-3/20 text-chart-3",
-    question: "ค่าของ sin²(45°) + cos²(45°) เท่ากับ",
-    options: [
-      { key: "A", value: "0" },
-      { key: "B", value: "0.5" },
-      { key: "C", value: "1" },
-      { key: "D", value: "2" },
-    ],
-    correctAnswer: "C",
-  },
-  {
-    id: 5,
-    category: "สถิติ",
-    categoryColor: "bg-chart-4/20 text-chart-4",
-    question: "ข้อมูลชุดหนึ่งมีค่า 2, 4, 6, 8, 10 ค่าเฉลี่ยเลขคณิตคือ",
-    options: [
-      { key: "A", value: "5" },
-      { key: "B", value: "6" },
-      { key: "C", value: "7" },
-      { key: "D", value: "8" },
-    ],
-    correctAnswer: "B",
-  },
-]
+interface ExamQuestion {
+  id: string
+  order: number
+  category: string
+  questionText: string
+  imageUrl: string | null
+  choices: Choice[]
+}
+
+interface ExamData {
+  id: string
+  title: string
+  durationMins: number
+  pdfUrl: string | null
+  questions: ExamQuestion[]
+}
 
 interface StudentExamThaiProps {
-  examTitle: string
-  onSubmit: (answers: Record<number, string>) => void
+  examId: string
+  onSubmit: (answers: Record<string, string>, examData: ExamData) => void
   onBack: () => void
 }
 
-export function StudentExamThai({ examTitle, onSubmit, onBack }: StudentExamThaiProps) {
+function getCategoryColor(category: string) {
+  const map: Record<string, string> = {
+    แคลคูลัส: "bg-chart-1/20 text-chart-1",
+    พีชคณิต: "bg-chart-2/20 text-chart-2",
+    ตรีโกณมิติ: "bg-chart-3/20 text-chart-3",
+    สถิติ: "bg-chart-4/20 text-chart-4",
+    ลอการิทึม: "bg-chart-5/20 text-chart-5",
+  }
+  return map[category] ?? "bg-secondary text-muted-foreground"
+}
+
+export function StudentExamThai({ examId, onSubmit, onBack }: StudentExamThaiProps) {
+  const [examData, setExamData] = useState<ExamData | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [fetchError, setFetchError] = useState("")
   const [currentQuestion, setCurrentQuestion] = useState(0)
-  const [answers, setAnswers] = useState<Record<number, string>>({})
-  const [timeLeft, setTimeLeft] = useState(45 * 60) // 45 minutes in seconds
+  const [answers, setAnswers] = useState<Record<string, string>>({})
+  const [timeLeft, setTimeLeft] = useState(0)
   const [showConfirm, setShowConfirm] = useState(false)
+  const [showPdf, setShowPdf] = useState(false)
 
   useEffect(() => {
+    fetch(`/api/exams/${examId}`)
+      .then((r) => r.json())
+      .then((data: ExamData) => {
+        setExamData(data)
+        setTimeLeft(data.durationMins * 60)
+        setLoading(false)
+      })
+      .catch(() => {
+        setFetchError("โหลดข้อสอบไม่สำเร็จ")
+        setLoading(false)
+      })
+  }, [examId])
+
+  useEffect(() => {
+    if (!examData || timeLeft <= 0) return
     const timer = setInterval(() => {
       setTimeLeft((prev) => {
         if (prev <= 1) {
           clearInterval(timer)
-          onSubmit(answers)
+          onSubmit(answers, examData)
           return 0
         }
         return prev - 1
       })
     }, 1000)
-
     return () => clearInterval(timer)
-  }, [answers, onSubmit])
+  }, [examData, answers, onSubmit, timeLeft])
 
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60)
@@ -116,19 +92,32 @@ export function StudentExamThai({ examTitle, onSubmit, onBack }: StudentExamThai
     return `${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`
   }
 
-  const handleSelectAnswer = (questionId: number, answer: string) => {
-    setAnswers((prev) => ({ ...prev, [questionId]: answer }))
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="w-8 h-8 border-4 border-accent border-t-transparent rounded-full animate-spin" />
+      </div>
+    )
   }
 
-  const question = QUESTIONS[currentQuestion]
-  const progress = ((currentQuestion + 1) / QUESTIONS.length) * 100
+  if (fetchError || !examData) {
+    return (
+      <div className="min-h-screen flex items-center justify-center flex-col gap-4">
+        <p className="text-destructive">{fetchError || "ไม่พบข้อสอบ"}</p>
+        <Button variant="outline" onClick={onBack}>กลับ</Button>
+      </div>
+    )
+  }
+
+  const question = examData.questions[currentQuestion]
+  const progress = ((currentQuestion + 1) / examData.questions.length) * 100
   const answeredCount = Object.keys(answers).length
 
   const handleSubmit = () => {
-    if (answeredCount < QUESTIONS.length) {
+    if (answeredCount < examData.questions.length) {
       setShowConfirm(true)
     } else {
-      onSubmit(answers)
+      onSubmit(answers, examData)
     }
   }
 
@@ -148,21 +137,34 @@ export function StudentExamThai({ examTitle, onSubmit, onBack }: StudentExamThai
             </Button>
             <div>
               <h1 className="font-semibold text-foreground text-sm md:text-base">
-                {examTitle}
+                {examData.title}
               </h1>
               <p className="text-xs text-muted-foreground">
-                ข้อที่ {currentQuestion + 1} จาก {QUESTIONS.length}
+                ข้อที่ {currentQuestion + 1} จาก {examData.questions.length}
               </p>
             </div>
           </div>
 
-          <div
-            className={`flex items-center gap-2 px-3 py-1.5 rounded-lg ${
-              timeLeft < 300 ? "bg-destructive/20 text-destructive" : "bg-secondary text-foreground"
-            }`}
-          >
-            <Clock className="w-4 h-4" />
-            <span className="font-mono font-medium">{formatTime(timeLeft)}</span>
+          <div className="flex items-center gap-2">
+            {examData.pdfUrl && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setShowPdf((v) => !v)}
+                className="text-xs hidden md:flex"
+              >
+                <FileText className="w-3.5 h-3.5 mr-1" />
+                {showPdf ? "ซ่อน PDF" : "ดูโจทย์ PDF"}
+              </Button>
+            )}
+            <div
+              className={`flex items-center gap-2 px-3 py-1.5 rounded-lg ${
+                timeLeft < 300 ? "bg-destructive/20 text-destructive" : "bg-secondary text-foreground"
+              }`}
+            >
+              <Clock className="w-4 h-4" />
+              <span className="font-mono font-medium">{formatTime(timeLeft)}</span>
+            </div>
           </div>
         </div>
       </header>
@@ -170,29 +172,76 @@ export function StudentExamThai({ examTitle, onSubmit, onBack }: StudentExamThai
       {/* Main Content */}
       <main className="flex-1 p-4 md:p-8">
         <div className="max-w-4xl mx-auto">
+
+          {/* PDF Viewer Panel */}
+          {showPdf && examData.pdfUrl && (
+            <Card className="border-border/50 bg-card/50 mb-6">
+              <CardContent className="p-4">
+                <div className="flex items-center justify-between mb-3">
+                  <h3 className="text-sm font-medium text-foreground flex items-center gap-2">
+                    <FileText className="w-4 h-4 text-accent" />
+                    เอกสารโจทย์ PDF
+                  </h3>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-7 w-7"
+                    onClick={() => setShowPdf(false)}
+                  >
+                    <X className="w-4 h-4" />
+                  </Button>
+                </div>
+                <PdfViewer url={examData.pdfUrl} />
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Mobile PDF button */}
+          {examData.pdfUrl && (
+            <div className="md:hidden mb-4">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setShowPdf((v) => !v)}
+                className="w-full text-xs"
+              >
+                <FileText className="w-3.5 h-3.5 mr-1" />
+                {showPdf ? "ซ่อน PDF โจทย์" : "ดูโจทย์ PDF"}
+              </Button>
+            </div>
+          )}
+
           {/* Question Card */}
           <Card className="border-border/50 bg-card/50 mb-6">
             <CardContent className="p-6">
-              {/* Category Badge */}
               <span
-                className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium mb-4 ${question.categoryColor}`}
+                className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium mb-4 ${getCategoryColor(question.category)}`}
               >
                 {question.category}
               </span>
 
-              {/* Question */}
               <h2 className="text-lg md:text-xl font-medium text-foreground mb-6">
-                {question.id}. {question.question}
+                {question.order}. {question.questionText}
               </h2>
 
-              {/* Options */}
+              {question.imageUrl && (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={question.imageUrl}
+                  alt="ภาพประกอบโจทย์"
+                  className="max-w-full rounded-lg mb-4 border border-border"
+                />
+              )}
+
               <div className="space-y-3">
-                {question.options.map((option) => (
+                {question.choices.map((choice) => (
                   <button
-                    key={option.key}
-                    onClick={() => handleSelectAnswer(question.id, option.key)}
+                    key={choice.key}
+                    onClick={() =>
+                      setAnswers((prev) => ({ ...prev, [question.id]: choice.key }))
+                    }
                     className={`w-full text-left p-4 rounded-xl border transition-all duration-200 ${
-                      answers[question.id] === option.key
+                      answers[question.id] === choice.key
                         ? "border-accent bg-accent/10 ring-1 ring-accent"
                         : "border-border hover:border-muted-foreground hover:bg-secondary/50"
                     }`}
@@ -200,14 +249,14 @@ export function StudentExamThai({ examTitle, onSubmit, onBack }: StudentExamThai
                     <div className="flex items-start gap-3">
                       <span
                         className={`w-8 h-8 rounded-lg flex items-center justify-center text-sm font-semibold shrink-0 ${
-                          answers[question.id] === option.key
+                          answers[question.id] === choice.key
                             ? "bg-accent text-accent-foreground"
                             : "bg-secondary text-muted-foreground"
                         }`}
                       >
-                        {option.key}
+                        {choice.key}
                       </span>
-                      <span className="text-foreground pt-1">{option.value}</span>
+                      <span className="text-foreground pt-1">{choice.value}</span>
                     </div>
                   </button>
                 ))}
@@ -216,8 +265,8 @@ export function StudentExamThai({ examTitle, onSubmit, onBack }: StudentExamThai
           </Card>
 
           {/* Question Navigator */}
-          <div className="flex items-center justify-center gap-2 mb-6">
-            {QUESTIONS.map((q, idx) => (
+          <div className="flex items-center justify-center gap-2 mb-6 flex-wrap">
+            {examData.questions.map((q, idx) => (
               <button
                 key={q.id}
                 onClick={() => setCurrentQuestion(idx)}
@@ -229,7 +278,7 @@ export function StudentExamThai({ examTitle, onSubmit, onBack }: StudentExamThai
                     : "bg-secondary text-muted-foreground hover:bg-secondary/80"
                 }`}
               >
-                {q.id}
+                {q.order}
               </button>
             ))}
           </div>
@@ -249,11 +298,11 @@ export function StudentExamThai({ examTitle, onSubmit, onBack }: StudentExamThai
             <div className="flex-1 max-w-xs">
               <Progress value={progress} className="h-2" />
               <p className="text-xs text-muted-foreground text-center mt-1">
-                ตอบแล้ว {answeredCount}/{QUESTIONS.length} ข้อ
+                ตอบแล้ว {answeredCount}/{examData.questions.length} ข้อ
               </p>
             </div>
 
-            {currentQuestion < QUESTIONS.length - 1 ? (
+            {currentQuestion < examData.questions.length - 1 ? (
               <Button
                 onClick={() => setCurrentQuestion((prev) => prev + 1)}
                 className="bg-accent hover:bg-accent/90 text-accent-foreground"
@@ -288,7 +337,7 @@ export function StudentExamThai({ examTitle, onSubmit, onBack }: StudentExamThai
                     ยืนยันการส่งข้อสอบ
                   </h3>
                   <p className="text-muted-foreground text-sm">
-                    คุณยังตอบไม่ครบทุกข้อ ({answeredCount}/{QUESTIONS.length} ข้อ)
+                    คุณยังตอบไม่ครบทุกข้อ ({answeredCount}/{examData.questions.length} ข้อ)
                     ต้องการส่งข้อสอบหรือไม่?
                   </p>
                 </div>
@@ -302,7 +351,7 @@ export function StudentExamThai({ examTitle, onSubmit, onBack }: StudentExamThai
                   กลับไปทำต่อ
                 </Button>
                 <Button
-                  onClick={() => onSubmit(answers)}
+                  onClick={() => onSubmit(answers, examData)}
                   className="flex-1 bg-accent hover:bg-accent/90 text-accent-foreground"
                 >
                   ส่งข้อสอบ
@@ -316,4 +365,4 @@ export function StudentExamThai({ examTitle, onSubmit, onBack }: StudentExamThai
   )
 }
 
-export { QUESTIONS }
+export type { ExamData, ExamQuestion }
