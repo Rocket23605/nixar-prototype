@@ -140,11 +140,11 @@ export function LoginPage({ onLogin }: LoginPageProps) {
               <div className="grid grid-cols-2 gap-2 text-xs">
                 <div className="p-2 rounded-lg bg-secondary/30 border border-border/50">
                   <p className="font-medium text-foreground">นักเรียน</p>
-                  <p className="text-muted-foreground">student1 / 1234</p>
+                  <p className="text-muted-foreground">student01 / student1234</p>
                 </div>
                 <div className="p-2 rounded-lg bg-secondary/30 border border-border/50">
                   <p className="font-medium text-foreground">ผู้ดูแล</p>
-                  <p className="text-muted-foreground">admin / admin</p>
+                  <p className="text-muted-foreground">admin / admin1234</p>
                 </div>
               </div>
             </div>
